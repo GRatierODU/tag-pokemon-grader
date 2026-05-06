@@ -5,9 +5,11 @@
  * - Create a Blob store (e.g. "exemplar-blob"), set to Public.
  * - Create a read-write token scoped to that store (Vercel dashboard).
  *
- * Usage (PowerShell):
- *   $env:EXEMPLAR_READ_WRITE_TOKEN="vercel_blob_rw_..."
- *   npx tsx scripts/upload-dig-cache-to-vercel-blob.ts
+ * Token env (first match wins): EXEMPLAR_READ_WRITE_TOKEN, EXEMPLAR_BLOB_READ_WRITE_TOKEN,
+ * BLOB_READ_WRITE_TOKEN. Same token as Vercel Blob quickstart; keep it in `.env` (gitignored).
+ *
+ * Usage:
+ *   npm run upload:exemplars-blob
  *
  * Options:
  *   --dry-run           print actions only
@@ -122,7 +124,7 @@ async function main() {
   const tok = token();
   if (!tok && !dryRun) {
     console.error(
-      "Set EXEMPLAR_READ_WRITE_TOKEN or EXEMPLAR_BLOB_READ_WRITE_TOKEN (read-write token for exemplar-blob store)."
+      "Set EXEMPLAR_READ_WRITE_TOKEN (or EXEMPLAR_BLOB_READ_WRITE_TOKEN / BLOB_READ_WRITE_TOKEN) for exemplar-blob."
     );
     process.exit(1);
   }
