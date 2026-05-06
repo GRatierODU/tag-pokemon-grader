@@ -5,7 +5,7 @@ Put these here (or supply them via **`VERCEL_INBOX_TAR_GZ_URL`** on Vercel — s
 - `tag_pop_all_card_urls.txt`
 - `tag_pop_cert_index.jsonl`
 
-**Tarball for Vercel env** (paths must be exactly these names at the archive root after extract):
+Large cert index (`tag_pop_cert_index.jsonl` **> 100 MB**) must use **Git LFS** on GitHub — see **`.gitattributes`**. After clone, run **`git lfs pull`** (Vercel does this via **`vercel.json`** **`installCommand`**). Enable **Git LFS** on the Vercel project’s **Git** tab.
 
 ```bash
 cd data/inbox

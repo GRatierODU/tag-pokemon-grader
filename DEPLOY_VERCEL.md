@@ -30,6 +30,8 @@ During **`npm run vercel-build`**, **`scripts/vercel-prebuild.cjs`** runs **befo
 
 4. If there are no inbox inputs and no **`app.db`**, an **empty-schema** **`app.db`** is created — search stays empty until you add real data (**A**, **B**, or **C** below).
 
+**Git LFS:** `tag_pop_cert_index.jsonl` can exceed GitHub’s **100 MB** per-file cap, so it is tracked with **Git LFS** (see **`.gitattributes`**). On Vercel, enable **Git Large File Storage** in the project’s **Git** settings. **`vercel.json`** uses **`git lfs install && git lfs pull && npm install`** so the real JSONL exists before **`build:index`**. If only the small LFS pointer is checked out, indexing fails silently or with parse errors.
+
 ## Your checklist
 
 1. **Push this repo** to GitHub (or GitLab / Bitbucket) if it is not hosted yet.
