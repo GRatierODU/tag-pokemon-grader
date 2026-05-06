@@ -25,7 +25,8 @@ export function getDb(): Database.Database {
     dbSingleton = null;
   }
   if (!dbSingleton) {
-    dbSingleton = new Database(pathname);
+    const options = process.env.VERCEL ? { readonly: true } : undefined;
+    dbSingleton = new Database(pathname, options);
     dbFileSignature = sig;
   }
   return dbSingleton;

@@ -16,13 +16,17 @@ This repo is wired for **[Vercel](https://vercel.com)** with `vercel.json` + `np
    - Framework: Next.js (**auto-detected**).  
    - Build command is already **`npm run vercel-build`** from `vercel.json` (`vercel-prebuild` + **`next build`**).
 
-3. **SQLite data** — you need **either** committed inbox sources **or** a committed DB:
+3. **SQLite data** — for **search + grading with indexed certs**, you need **either** committed inbox sources **or** a real DB:
+
    - **Option A:** Commit  
      `data/inbox/tag_pop_all_card_urls.txt`  
      `data/inbox/tag_pop_cert_index.jsonl`  
      (paths match `getCardUrlsPath` / `getCertIndexPath` in `src/lib/config.ts`.)  
-     Vercel will run **`npm run build:index`** during every build.
-   - **Option B:** Run **`npm run build:index`** locally, then **`git add -f data/app.db`** and commit **`data/app.db`** (still listed in `.gitignore` locally; **`git add -f`** forces).
+     Vercel runs **`npm run build:index`** during every build.
+
+   - **Option B:** Run **`npm run build:index`** locally, then **`git add -f data/app.db`** and commit **`data/app.db`**.
+
+   - **Neither:** `vercel-prebuild` generates an **empty** `data/app.db` (tables only). The UI and deploy succeed; card search stays empty until you add **Option A** or **B**.
 
 4. **Environment variables** in **Vercel → Project → Settings → Environment Variables** (Production / Preview):
 

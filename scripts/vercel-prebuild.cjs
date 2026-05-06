@@ -26,16 +26,14 @@ if (urls && certs) {
     process.exit(1);
   }
 } else if (!db) {
-  console.error(
-    [
-      "[vercel-prebuild] Missing SQLite DB for deployment.",
-      "Add one of:",
-      '  • data/inbox/tag_pop_all_card_urls.txt + data/inbox/tag_pop_cert_index.jsonl (index is built on Vercel), or',
-      "  • data/app.db (run `npm run build:index` locally, then git add -f data/app.db).",
-      "See DEPLOY_VERCEL.md.",
-    ].join("\n")
+  console.log(
+    "[vercel-prebuild] No inbox CSV/JSONL and no app.db → empty SQLite schema"
   );
-  process.exit(1);
+  execSync("npx tsx scripts/ensure-empty-db.ts", {
+    stdio: "inherit",
+    cwd: root,
+    env: process.env,
+  });
 } else {
   console.log("[vercel-prebuild] Using committed data/app.db");
 }
