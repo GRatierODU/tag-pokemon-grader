@@ -44,6 +44,20 @@ During **`npm run vercel-build`**, **`scripts/vercel-prebuild.cjs`** runs **befo
 
 5. **`DIG_EXEMPLAR_BASE_URL` wins over disk:** leave it unset locally to keep using **`data/dig_cache/`**; set it on **Vercel** for serverless grading.
 
+## Serverless 250 MB limit (SQLite + traces)
+
+Vercel counts **unzipped** traced files per function. A large **`data/app.db`** plus Node modules can exceed **~250 MB**.
+
+1. **Host `app.db` separately** and set **`SQLITE_DB_DOWNLOAD_URL`** to a stable **`https://`** URL (Vercel Blob, R2, S3 public, etc.).  
+   - Add the same variable in **Vercel → Environment variables** for **Production** (and Preview if needed). It must be present at **build time** too so `next.config` **omits** `./data/app.db` from the trace.  
+   - On each cold start, **`/api/cards`** and **`/api/grade`** download the file once into **`/tmp`** (cached for warm invocations).
+
+2. **`next.config.ts`** also **excludes `sharp`** from **`/api/**`** traces (the app API does not use it; it was adding tens of MB).
+
+3. Build logs will warn if **`data/app.db` > ~40 MB** and **`SQLITE_DB_DOWNLOAD_URL`** is missing.
+
+4. Optional: set **`VERCEL_ANALYZE_BUILD_OUTPUT=1`** to inspect trace size.
+
 ## Your checklist
 
 1. **Push this repo** to GitHub (or GitLab / Bitbucket) if it is not hosted yet.
@@ -75,8 +89,7 @@ During **`npm run vercel-build`**, **`scripts/vercel-prebuild.cjs`** runs **befo
    | `DIG_EXEMPLAR_BASE_URL` | **Yes for graded exemplars on Vercel** | `https://…` origin mirroring **`dig_cache/<cert_id>/`**. Omit locally to read disk. |
    | `DIG_EXEMPLAR_PATH_PREFIX` | No | Extra path segments before cert folders (`en`, `ja`, …). |
    | `DIG_EXEMPLAR_FETCH_AUTHORIZATION` | No | `Authorization` header for private CDN/storage. |
-
-5. Click **Deploy**. After green: open the **`*.vercel.app`** URL.
+   | `SQLITE_DB_DOWNLOAD_URL` | **Recommended for large indexes on Vercel** | `https://…/app.db`. When set (build + runtime), `app.db` is **not** traced; API routes download to `/tmp`. | After green: open the **`*.vercel.app`** URL.
 
 6. **Local `vercel deploy` and `data/dig_cache/`** — The CLI walks the tree and applies ignore rules relative to each folder, so a root pattern like `data/dig_cache/**` does **not** strip the thousands of files inside that directory. **Either:** push to Git and let Vercel build from the remote clone (recommended; `dig_cache` stays untracked), **or** keep slabs **outside the repo** by setting **`DIG_CACHE_ROOT`** to an absolute path **outside** `tag-pokemon-grader` so the cache is never uploaded.
 

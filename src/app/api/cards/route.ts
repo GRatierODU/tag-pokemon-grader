@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { initSqliteForServerless } from "@/lib/sqlite-remote-bootstrap";
 import { getDb } from "@/lib/db";
 import { parsePopCardUrl } from "@/lib/parse-pop-card-url";
 import { searchCards } from "@/lib/search-cards";
@@ -15,6 +16,7 @@ export async function GET(req: Request) {
   }
 
   try {
+    await initSqliteForServerless();
     const db = getDb();
     const hits = searchCards(db, q, 50);
     /** Resolve thumbnails one-by-one to avoid pokemontcg.io rate limits from parallel bursts. */

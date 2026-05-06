@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { initSqliteForServerless } from "@/lib/sqlite-remote-bootstrap";
 import { getDb } from "@/lib/db";
 import {
   gradeWithGemini,
@@ -35,6 +36,7 @@ function exemplarSlotForCert(certId: string, slotCount: number): number {
 
 export async function POST(req: Request) {
   try {
+    await initSqliteForServerless();
     const form = await req.formData();
     const popNorm = String(form.get("pop_card_url_norm") ?? "");
     const condition = String(form.get("raw_condition") ?? "NM");
