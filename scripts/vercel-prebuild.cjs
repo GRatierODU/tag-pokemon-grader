@@ -137,10 +137,14 @@ function exists(rel) {
   if (process.env.VERCEL && exists("data/app.db")) {
     const st = fs.statSync(path.join(root, "data", "app.db"));
     const mb = st.size / (1024 * 1024);
-    if (mb > 40 && !(process.env.SQLITE_DB_DOWNLOAD_URL || "").trim()) {
+    const hasRemote =
+      (process.env.SQLITE_DB_DOWNLOAD_URL || "").trim() ||
+      (process.env.SQLITE_BLOB_PATHNAME || "").trim();
+    if (mb > 40 && !hasRemote) {
       console.warn(
-        `[vercel-prebuild] data/app.db is ~${mb.toFixed(1)} MB. Set SQLITE_DB_DOWNLOAD_URL (https) to ` +
-          `fetch it at cold start and avoid the 250 MB serverless unzipped limit — see DEPLOY_VERCEL.md.`
+        `[vercel-prebuild] data/app.db is ~${mb.toFixed(1)} MB. Set SQLITE_DB_DOWNLOAD_URL (public https) ` +
+          `or SQLITE_BLOB_PATHNAME + BLOB_READ_WRITE_TOKEN (private Vercel Blob) to fetch at runtime and avoid ` +
+          `the 250 MB serverless unzipped limit — see DEPLOY_VERCEL.md.`
       );
     }
   }
