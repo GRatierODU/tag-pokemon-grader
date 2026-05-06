@@ -12,6 +12,7 @@
     "build:index": "tsx scripts/build-index.ts",
     "db:empty": "tsx scripts/ensure-empty-db.ts",
     "ingest:dig": "tsx scripts/ingest-dig.ts",
+    "upload:exemplars-blob": "tsx scripts/upload-dig-cache-to-vercel-blob.ts",
     "list:names": "tsx scripts/list-card-names.ts",
     "vercel-build": "node scripts/vercel-prebuild.cjs && npm run build"
   },
