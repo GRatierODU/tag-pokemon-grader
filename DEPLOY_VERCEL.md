@@ -5,7 +5,7 @@ This repo is wired for **[Vercel](https://vercel.com)** with `vercel.json` + `np
 ## What works on Vercel
 
 - **Static UI**, **wizard**, **SQLite card search**, **Gemini grading API** whenever `data/app.db` is present at runtime (bundled via `outputFileTracingIncludes`).
-- **`data/dig_cache/`** for exemplar slabs is normally **ignored by git** and is **large**. **Full DIG-backed grading may fail online** unless you refactor to Blob/R2/object storage or commit a trimmed cache (risking huge deploy size). Errors will appear at grade time when manifests/images are missing.
+- **TAG DIG exemplar slabs** for grading load from **`DIG_EXEMPLAR_BASE_URL`** (HTTPS object storage/CDN). Layout mirrors local `dig_cache`: `{base}/{optional prefix}/{cert_id}/manifest.json` and `{base}/{optional prefix}/{cert_id}/{image file}`. If **`DIG_EXEMPLAR_BASE_URL`** is unset, the app reads from **`DIG_CACHE_ROOT`** / **`data/dig_cache/`** (typical laptop dev).
 
 ## SQLite index build on Vercel (`build:index`)
 
@@ -31,6 +31,18 @@ During **`npm run vercel-build`**, **`scripts/vercel-prebuild.cjs`** runs **befo
 4. If there are no inbox inputs and no **`app.db`**, an **empty-schema** **`app.db`** is created — search stays empty until you add real data (**A**, **B**, or **C** below).
 
 **Git LFS:** `tag_pop_cert_index.jsonl` can exceed GitHub’s **100 MB** per-file cap, so it is tracked with **Git LFS** (see **`.gitattributes`**). On Vercel, enable **Git Large File Storage** in the project’s **Git** settings. **`vercel.json`** uses **`git lfs install && git lfs pull && npm install`** so the real JSONL exists before **`build:index`**. If only the small LFS pointer is checked out, indexing fails silently or with parse errors.
+
+## Remote DIG exemplars (production)
+
+1. **Upload** your local `data/dig_cache/<cert_id>/` trees to object storage (R2, S3, Vercel Blob, etc.) so each cert folder keeps **`manifest.json`** and the image files referenced there (same names as after `ingest-dig`).
+
+2. **Set** **`DIG_EXEMPLAR_BASE_URL`** to the stable HTTPS origin that serves those folders, **without** a trailing slash (e.g. `https://pub-….r2.dev/dig` or your Blob public base).
+
+3. **Locales / datasets:** use **`DIG_EXEMPLAR_PATH_PREFIX`** so English vs Japanese (or versioned drops) live under different prefixes without changing code — e.g. `en`, `ja`, `2026/full`. Resolved URLs become `{base}/{prefix}/{cert_id}/manifest.json`.
+
+4. **Private buckets:** set **`DIG_EXEMPLAR_FETCH_AUTHORIZATION`** to a full **`Authorization`** header value the storage expects (`Bearer …`, vendor token, etc.). Public buckets leave it unset.
+
+5. **`DIG_EXEMPLAR_BASE_URL` wins over disk:** leave it unset locally to keep using **`data/dig_cache/`**; set it on **Vercel** for serverless grading.
 
 ## Your checklist
 
@@ -60,6 +72,9 @@ During **`npm run vercel-build`**, **`scripts/vercel-prebuild.cjs`** runs **befo
    | `POKEMONTCG_API_KEY` | No | Helps Pokémon TCG thumbnails; optional. |
    | `VERCEL_INBOX_TAR_GZ_URL` | No | HTTPS URL to gzip-tar of the two inbox files; extract + **`build:index`** on each deploy. |
    | `VERCEL_INBOX_ARCHIVE_MAX_MB` | No | Max download size in MiB (default **750**). |
+   | `DIG_EXEMPLAR_BASE_URL` | **Yes for graded exemplars on Vercel** | `https://…` origin mirroring **`dig_cache/<cert_id>/`**. Omit locally to read disk. |
+   | `DIG_EXEMPLAR_PATH_PREFIX` | No | Extra path segments before cert folders (`en`, `ja`, …). |
+   | `DIG_EXEMPLAR_FETCH_AUTHORIZATION` | No | `Authorization` header for private CDN/storage. |
 
 5. Click **Deploy**. After green: open the **`*.vercel.app`** URL.
 
@@ -84,5 +99,5 @@ Set the same env vars in the CLI flow or dashboard.
 
 ## Limits
 
-- **Function size**: bundling **`data/dig_cache`** can exceed limits; prefer search + grade without remote slab cache unless you shrink assets or externalize storage.
+- **Function time / egress**: grading fetches manifests + images per exemplar — expect extra latency versus local disk.
 - **Secrets**: never commit `.env` or `.env.local`; use dashboard env only.

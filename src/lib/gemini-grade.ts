@@ -1,9 +1,7 @@
-import fs from "fs/promises";
-import path from "path";
 import { GoogleGenAI } from "@google/genai";
 
-import { getDigCacheRoot } from "./config";
-import type { DigManifest } from "./dig-manifest";
+import { loadManifestImagesForGemini } from "./dig-exemplar-loader";
+export { loadManifestImagesForGemini };
 import { extractNumericFromGradeDisplay } from "./criterion-display";
 import { GradeOutputSchema, type GradeOutput } from "./grade-schema";
 
@@ -86,45 +84,6 @@ export function maxImagesPerExemplarForCount(exemplarCount: number): number {
   if (exemplarCount <= 12) return 4;
   if (exemplarCount <= 18) return 3;
   return 2;
-}
-
-const PRIORITY_KINDS: DigManifest["images"][number]["kind"][] = [
-  "front_main",
-  "back_main",
-  "front_sfx",
-  "back_sfx",
-  "detail",
-  "other",
-];
-
-export async function loadManifestImagesForGemini(
-  certId: string,
-  maxImages = 4
-): Promise<{ mimeType: string; base64: string; label: string }[]> {
-  const root = getDigCacheRoot();
-  const manifestPath = path.join(root, certId, "manifest.json");
-  const raw = await fs.readFile(manifestPath, "utf8");
-  const manifest = JSON.parse(raw) as DigManifest;
-  const sorted = [...manifest.images].sort(
-    (a, b) =>
-      PRIORITY_KINDS.indexOf(a.kind) - PRIORITY_KINDS.indexOf(b.kind)
-  );
-  const parts: { mimeType: string; base64: string; label: string }[] = [];
-  for (const img of sorted) {
-    if (parts.length >= maxImages) break;
-    const fp = path.join(root, certId, img.fileName);
-    try {
-      const buf = await fs.readFile(fp);
-      parts.push({
-        mimeType: "image/webp",
-        base64: buf.toString("base64"),
-        label: `${certId}_${img.kind}`,
-      });
-    } catch {
-      /* skip missing file */
-    }
-  }
-  return parts;
 }
 
 async function fileToBase64Part(file: File): Promise<{

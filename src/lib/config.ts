@@ -17,6 +17,32 @@ export function getDigCacheRoot(): string {
   return path.join(getDataRoot(), "dig_cache");
 }
 
+/** When set (https only), DIG exemplars load from `{base}/{prefix?}/{certId}/manifest.json` and image files instead of disk. */
+export function getDigExemplarRemoteBaseUrl(): string | null {
+  const raw = process.env.DIG_EXEMPLAR_BASE_URL?.trim();
+  if (!raw) return null;
+  if (!/^https:\/\//i.test(raw)) {
+    throw new Error(
+      "DIG_EXEMPLAR_BASE_URL must start with https:// (see DEPLOY_VERCEL.md)"
+    );
+  }
+  return raw.replace(/\/+$/, "");
+}
+
+/** Extra path under base before cert folders: e.g. `en`, `ja`, `datasets/2026-01`. */
+export function getDigExemplarPathPrefix(): string {
+  return (process.env.DIG_EXEMPLAR_PATH_PREFIX ?? "")
+    .trim()
+    .replace(/^\/+|\/+$/g, "");
+}
+
+/** Authorization header for private object storage (`Bearer …` or vendor-specific). */
+export function digExemplarFetchHeaders(): HeadersInit {
+  const auth = process.env.DIG_EXEMPLAR_FETCH_AUTHORIZATION?.trim();
+  if (!auth) return {};
+  return { Authorization: auth };
+}
+
 export function getDbPath(): string {
   const d = process.env.SQLITE_DB_PATH;
   if (d) return path.resolve(d);
