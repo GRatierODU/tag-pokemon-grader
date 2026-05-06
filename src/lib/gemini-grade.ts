@@ -86,6 +86,28 @@ export function maxImagesPerExemplarForCount(exemplarCount: number): number {
   return 2;
 }
 
+/**
+ * Slab images per exemplar cert: env `GEMINI_MAX_IMAGES_PER_EXEMPLAR` overrides scaling.
+ * Use `all` / `unlimited` / `0` to send every listed image from each DIG manifest (watch token/size limits).
+ */
+export function slabImagesCapForRequest(
+  exemplarCount: number,
+  explicit?: number
+): number {
+  if (explicit != null && Number.isFinite(explicit) && explicit > 0) {
+    return explicit;
+  }
+  const raw = process.env.GEMINI_MAX_IMAGES_PER_EXEMPLAR?.trim().toLowerCase();
+  if (raw != null && raw !== "") {
+    if (raw === "all" || raw === "unlimited" || raw === "0") {
+      return Number.POSITIVE_INFINITY;
+    }
+    const n = Number.parseInt(raw, 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return maxImagesPerExemplarForCount(exemplarCount);
+}
+
 async function fileToBase64Part(file: File): Promise<{
   mimeType: string;
   base64: string;
@@ -169,9 +191,10 @@ export async function gradeWithGemini(params: {
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const slabImagesCap =
-    params.maxImagesPerExemplar ??
-    maxImagesPerExemplarForCount(params.exemplars.length);
+  const slabImagesCap = slabImagesCapForRequest(
+    params.exemplars.length,
+    params.maxImagesPerExemplar
+  );
 
   const graderMode = params.graderMode ?? "tag";
 

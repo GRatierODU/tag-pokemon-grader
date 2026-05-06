@@ -123,7 +123,10 @@ async function readImageRemote(
   }
 }
 
-/** Load TAG DIG slab images for Gemini — remote HTTPS tree or local `dig_cache`. */
+/**
+ * Load TAG DIG slab images for Gemini — remote HTTPS tree or local `dig_cache`.
+ * @param maxImages Cap after priority sort; use `Infinity` (via env `GEMINI_MAX_IMAGES_PER_EXEMPLAR=all`) for every manifest image.
+ */
 export async function loadManifestImagesForGemini(
   certId: string,
   maxImages = 4
@@ -142,7 +145,7 @@ export async function loadManifestImagesForGemini(
   const parts: { mimeType: string; base64: string; label: string }[] = [];
 
   for (const img of sorted) {
-    if (parts.length >= maxImages) break;
+    if (Number.isFinite(maxImages) && parts.length >= maxImages) break;
 
     if (remoteConfigured) {
       const got = await readImageRemote(certId, img.fileName);
