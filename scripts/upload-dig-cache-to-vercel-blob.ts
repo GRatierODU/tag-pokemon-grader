@@ -6,7 +6,7 @@
  * - Create a read-write token scoped to that store (Vercel dashboard).
  *
  * Usage (PowerShell):
- *   $env:EXEMPLAR_BLOB_READ_WRITE_TOKEN="vercel_blob_rw_..."
+ *   $env:EXEMPLAR_READ_WRITE_TOKEN="vercel_blob_rw_..."
  *   npx tsx scripts/upload-dig-cache-to-vercel-blob.ts
  *
  * Options:
@@ -52,6 +52,7 @@ function parseArgs() {
 
 function token(): string | null {
   const t =
+    process.env.EXEMPLAR_READ_WRITE_TOKEN?.trim() ||
     process.env.EXEMPLAR_BLOB_READ_WRITE_TOKEN?.trim() ||
     process.env.BLOB_READ_WRITE_TOKEN?.trim();
   return t || null;
@@ -121,7 +122,7 @@ async function main() {
   const tok = token();
   if (!tok && !dryRun) {
     console.error(
-      "Set EXEMPLAR_BLOB_READ_WRITE_TOKEN (recommended) or BLOB_READ_WRITE_TOKEN to the read-write token for exemplar-blob."
+      "Set EXEMPLAR_READ_WRITE_TOKEN or EXEMPLAR_BLOB_READ_WRITE_TOKEN (read-write token for exemplar-blob store)."
     );
     process.exit(1);
   }
